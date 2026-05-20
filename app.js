@@ -228,6 +228,11 @@ const state = {
   modal: null,
   toast: "",
   filter: "All",
+  authMode: "login",
+  authReady: false,
+  isAdmin: false,
+  publicVerifications: {},
+  adminStats: null,
   theme: localStorage.getItem("learnindians-theme") || localStorage.getItem("swiftcert-theme") || "light",
   user: JSON.parse(localStorage.getItem("learnindians-user") || localStorage.getItem("swiftcert-user") || "null"),
   progress: JSON.parse(localStorage.getItem("learnindians-progress") || localStorage.getItem("swiftcert-progress") || "{}"),
@@ -235,12 +240,186 @@ const state = {
 };
 
 const app = document.querySelector("#app");
+const liConfig = window.LI_CONFIG || {};
+const hasSupabaseConfig =
+  Boolean(liConfig.supabaseUrl) &&
+  Boolean(liConfig.supabaseAnonKey) &&
+  !liConfig.supabaseUrl.includes("PASTE_") &&
+  !liConfig.supabaseAnonKey.includes("PASTE_");
+const supabaseClient =
+  hasSupabaseConfig && window.supabase
+    ? window.supabase.createClient(liConfig.supabaseUrl, liConfig.supabaseAnonKey)
+    : null;
+
+function isCloudReady() {
+  return Boolean(supabaseClient);
+}
 
 function save() {
   localStorage.setItem("learnindians-user", JSON.stringify(state.user));
   localStorage.setItem("learnindians-progress", JSON.stringify(state.progress));
   localStorage.setItem("learnindians-certificates", JSON.stringify(state.certificates));
   localStorage.setItem("learnindians-theme", state.theme);
+}
+
+async function initAuth() {
+  if (!isCloudReady()) {
+    state.authReady = true;
+    render();
+    return;
+  }
+
+  const { data } = await supabaseClient.auth.getSession();
+  const sessionUser = data.session?.user;
+  if (sessionUser) {
+    await hydrateCloudUser(sessionUser);
+  }
+  state.authReady = true;
+  render();
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    if (session?.user) {
+      await hydrateCloudUser(session.user);
+    } else {
+      state.user = null;
+      state.isAdmin = false;
+      state.progress = {};
+      state.certificates = {};
+      save();
+    }
+    render();
+  });
+}
+
+async function hydrateCloudUser(authUser, preferredName = "") {
+  const email = authUser.email || "";
+  const fallbackName = preferredName || authUser.user_metadata?.full_name || email.split("@")[0] || "Learner";
+  const { data: existingProfile } = await supabaseClient
+    .from("profiles")
+    .select("full_name,email,role")
+    .eq("id", authUser.id)
+    .maybeSingle();
+
+  if (!existingProfile) {
+    await supabaseClient.from("profiles").insert({
+      id: authUser.id,
+      full_name: fallbackName,
+      email,
+      role: liConfig.adminEmails?.includes(email) ? "admin" : "student",
+    });
+  }
+
+  const { data: profile } = await supabaseClient
+    .from("profiles")
+    .select("full_name,email,role")
+    .eq("id", authUser.id)
+    .maybeSingle();
+
+  state.user = {
+    id: authUser.id,
+    name: profile?.full_name || fallbackName,
+    email: profile?.email || email,
+  };
+  state.isAdmin = profile?.role === "admin" || liConfig.adminEmails?.includes(email);
+  await loadCloudData();
+  save();
+}
+
+async function loadCloudData() {
+  if (!isCloudReady() || !state.user?.id) return;
+  const [{ data: enrollments }, { data: certificates }] = await Promise.all([
+    supabaseClient.from("enrollments").select("*").eq("user_id", state.user.id),
+    supabaseClient.from("certificates").select("*").eq("user_id", state.user.id),
+  ]);
+
+  state.progress = {};
+  (enrollments || []).forEach((row) => {
+    state.progress[row.course_id] = {
+      paid: row.paid,
+      completedModules: row.completed_modules || [],
+      quizPassed: row.quiz_passed,
+    };
+  });
+
+  state.certificates = {};
+  (certificates || []).forEach((row) => {
+    state.certificates[row.course_id] = {
+      id: row.id,
+      name: row.student_name,
+      course: row.course_title,
+      date: new Date(row.completed_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      url: row.verification_url,
+      issuer: row.issuer,
+      board: row.board,
+    };
+  });
+}
+
+async function syncProgress(courseId) {
+  if (!isCloudReady() || !state.user?.id) return;
+  const progress = getProgress(courseId);
+  await supabaseClient.from("enrollments").upsert({
+    user_id: state.user.id,
+    course_id: courseId,
+    paid: progress.paid,
+    completed_modules: progress.completedModules,
+    quiz_passed: progress.quizPassed,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+async function syncCertificate(courseId, cert) {
+  if (!isCloudReady() || !state.user?.id) return;
+  await supabaseClient.from("certificates").upsert({
+    id: cert.id,
+    user_id: state.user.id,
+    course_id: courseId,
+    student_name: cert.name,
+    course_title: cert.course,
+    completed_at: new Date().toISOString(),
+    verification_url: cert.url,
+    issuer: brandConfig.issuerName,
+    board: brandConfig.certificationBoard,
+  });
+}
+
+async function loadPublicCertificate(id) {
+  if (!isCloudReady() || state.publicVerifications[id]) return;
+  const { data } = await supabaseClient
+    .from("certificates")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (data) {
+    state.publicVerifications[id] = {
+      id: data.id,
+      name: data.student_name,
+      course: data.course_title,
+      date: new Date(data.completed_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      url: data.verification_url,
+      issuer: data.issuer,
+      board: data.board,
+    };
+    render();
+  }
+}
+
+async function loadAdminStats() {
+  if (!isCloudReady() || !state.isAdmin || state.adminStats) return;
+  const [{ data: profiles }, { data: enrollments }, { data: certificates }] = await Promise.all([
+    supabaseClient.from("profiles").select("id,email,full_name,role"),
+    supabaseClient.from("enrollments").select("course_id,paid,quiz_passed"),
+    supabaseClient.from("certificates").select("id,course_id"),
+  ]);
+
+  state.adminStats = {
+    users: profiles?.length || 0,
+    enrollments: enrollments?.filter((item) => item.paid).length || 0,
+    completions: enrollments?.filter((item) => item.quiz_passed).length || 0,
+    certificates: certificates?.length || 0,
+  };
+  render();
 }
 
 function navigate(view, courseId) {
@@ -277,6 +456,7 @@ function getProgress(courseId) {
 function setProgress(courseId, patch) {
   state.progress[courseId] = { ...getProgress(courseId), ...patch };
   save();
+  syncProgress(courseId);
 }
 
 function percent(course) {
@@ -304,6 +484,7 @@ function certificateFor(course) {
   };
   state.certificates[course.id] = cert;
   save();
+  syncCertificate(course.id, cert);
   return cert;
 }
 
@@ -500,6 +681,7 @@ function dashboardView() {
         <div class="progress-list">
           <div class="progress-item"><strong>Subscription</strong><p class="muted">₹${brandConfig.subscriptionPrice} monthly unlimited access</p></div>
           <div class="progress-item"><strong>${Object.keys(state.certificates).length}</strong><p class="muted">Certificates earned</p></div>
+          <div class="progress-item"><strong>${isCloudReady() ? "Live" : "Demo"}</strong><p class="muted">${isCloudReady() ? "Data saved in Supabase" : "Add Supabase keys for real storage"}</p></div>
         </div>
       </aside>
       <div class="panel content-panel">
@@ -652,7 +834,8 @@ function certificateMarkup(cert) {
 }
 
 function verificationView(id) {
-  const cert = Object.values(state.certificates).find((item) => item.id === id) || {
+  loadPublicCertificate(id);
+  const cert = Object.values(state.certificates).find((item) => item.id === id) || state.publicVerifications[id] || {
     id,
     name: "Verified Learner",
     course: "Professional Certification",
@@ -675,8 +858,21 @@ function verificationView(id) {
 }
 
 function adminView() {
+  if (!state.user) {
+    return emptyState("Admin login required", "Login with the admin email to view the operating dashboard.", "Admin login", "openLogin('login')");
+  }
+  if (!state.isAdmin) {
+    return emptyState("Admin access only", "This dashboard is restricted to approved LearnIndians admin accounts.", "Go to dashboard", "navigate('dashboard')");
+  }
+  loadAdminStats();
   const paid = Object.values(state.progress).filter((item) => item.paid).length;
   const completed = Object.values(state.progress).filter((item) => item.quizPassed).length;
+  const stats = state.adminStats || {
+    users: isCloudReady() ? "..." : 1,
+    enrollments: paid,
+    completions: completed,
+    certificates: Object.keys(state.certificates).length,
+  };
   return `
     <section>
       <div class="section-head">
@@ -687,10 +883,10 @@ function adminView() {
         </div>
       </div>
       <div class="admin-grid">
-        <div class="admin-card"><strong>${courses.length}</strong><span class="muted">Launch courses</span></div>
-        <div class="admin-card"><strong>${paid}</strong><span class="muted">Enrollments</span></div>
-        <div class="admin-card"><strong>${completed}</strong><span class="muted">Completions</span></div>
-        <div class="admin-card"><strong>₹${paid * 49}</strong><span class="muted">Demo revenue</span></div>
+        <div class="admin-card"><strong>${stats.users}</strong><span class="muted">Users</span></div>
+        <div class="admin-card"><strong>${stats.enrollments}</strong><span class="muted">Paid enrollments</span></div>
+        <div class="admin-card"><strong>${stats.completions}</strong><span class="muted">Completions</span></div>
+        <div class="admin-card"><strong>${stats.certificates}</strong><span class="muted">Certificates issued</span></div>
       </div>
       <div class="panel content-panel">
         <h3>Course performance</h3>
@@ -839,12 +1035,17 @@ function modal() {
   return `
     <div class="modal-backdrop">
       <div class="panel modal">
-        <p class="eyebrow">Fast login</p>
-        <h2>Start your certificate path</h2>
-        <p class="muted">Use this demo login to simulate Google login or email OTP.</p>
-        <div class="field"><label>Full name</label><input id="name" value="Aarav Sharma" /></div>
-        <div class="field"><label>Email</label><input id="email" value="aarav@example.com" /></div>
-        <button class="primary-btn" onclick="completeLogin()">Continue</button>
+        <p class="eyebrow">${isCloudReady() ? "Secure email login" : "Demo login"}</p>
+        <h2>${state.authMode === "signup" ? "Create your account" : "Login to LearnIndians"}</h2>
+        <p class="muted">${isCloudReady() ? "Use email and password. Your progress and certificates will be stored securely." : "Supabase keys are not added yet, so this uses demo login on this browser."}</p>
+        <div class="segmented">
+          <button class="${state.authMode === "login" ? "active" : ""}" onclick="setAuthMode('login')">Login</button>
+          <button class="${state.authMode === "signup" ? "active" : ""}" onclick="setAuthMode('signup')">Create account</button>
+        </div>
+        <div class="field ${state.authMode === "login" ? "hide" : ""}"><label>Full name</label><input id="name" value="Aarav Sharma" /></div>
+        <div class="field"><label>Email</label><input id="email" type="email" value="aarav@example.com" /></div>
+        <div class="field"><label>Password</label><input id="password" type="password" value="learn1234" /></div>
+        <button class="primary-btn" onclick="completeLogin()">${state.authMode === "signup" ? "Create account" : "Login"}</button>
         <button class="ghost-btn" onclick="closeModal()">Cancel</button>
       </div>
     </div>
@@ -942,16 +1143,47 @@ function openCertificate(courseId) {
   navigate("certificate", courseId);
 }
 
-function openLogin() {
+function openLogin(mode = "login") {
+  state.authMode = mode;
   state.modal = { type: "login" };
   render();
 }
 
-function completeLogin() {
-  const name = document.querySelector("#name").value.trim() || "Demo Learner";
+function setAuthMode(mode) {
+  state.authMode = mode;
+  render();
+}
+
+async function completeLogin() {
+  const name = document.querySelector("#name")?.value.trim() || "Demo Learner";
   const email = document.querySelector("#email").value.trim() || "learner@example.com";
+  const password = document.querySelector("#password")?.value || "learn1234";
   const next = state.modal.next;
-  state.user = { name, email };
+
+  if (isCloudReady()) {
+    const authCall =
+      state.authMode === "signup"
+        ? supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { full_name: name } },
+          })
+        : supabaseClient.auth.signInWithPassword({ email, password });
+
+    const { data, error } = await authCall;
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+
+    if (data.user) {
+      await hydrateCloudUser(data.user, name);
+    }
+  } else {
+    state.user = { name, email };
+    state.isAdmin = liConfig.adminEmails?.includes(email);
+  }
+
   state.modal = null;
   save();
   showToast(`Logged in. Welcome to ${brandConfig.platformName}.`);
@@ -959,8 +1191,12 @@ function completeLogin() {
   render();
 }
 
-function logout() {
+async function logout() {
+  if (isCloudReady()) {
+    await supabaseClient.auth.signOut();
+  }
   state.user = null;
+  state.isAdmin = false;
   save();
   render();
 }
@@ -976,3 +1212,4 @@ window.addEventListener("hashchange", () => {
 });
 
 render();
+initAuth();
