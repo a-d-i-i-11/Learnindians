@@ -992,6 +992,38 @@ h2 {
   box-shadow: 0 8px 18px rgba(20, 35, 60, 0.08);
 }
 
+.payment-steps {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.payment-steps div {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.payment-steps strong {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+  color: var(--brand);
+}
+
+.payment-steps span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .field label {
   color: var(--muted);
   font-size: 13px;
