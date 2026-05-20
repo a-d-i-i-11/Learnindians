@@ -213,7 +213,8 @@ const brandConfig = {
   supportEmail: "info@hirenix.co",
   futureDomains: ["learnindians.in", "learnindians.com", "getlearnindians.com"],
   temporaryDomain: "learnindians.vercel.app",
-  paymentGateway: "PayU",
+  paymentGateway: "Cashfree",
+  paymentLink: "https://payments-test.cashfree.com/links?code=Xadu9fjobjl0_AAAAAACpGe0",
   businessName: "LearnIndians",
   coursePrice: 49,
   subscriptionPrice: 199,
@@ -592,7 +593,7 @@ function trustSection() {
     <section class="trust-band">
       <div>
         <p class="eyebrow">Payment-ready structure</p>
-        <h2>Ready for a clean PayU review path.</h2>
+        <h2>Ready for a clean payment review path.</h2>
         <p class="muted">The public app includes business details, support contact, pricing, terms, privacy policy, refund policy, and certificate verification. We can deploy first on Vercel and connect a custom domain later.</p>
       </div>
       <div class="trust-grid">
@@ -1024,9 +1025,15 @@ function modal() {
         <div class="panel modal">
           <p class="eyebrow">${brandConfig.paymentGateway} checkout</p>
           <h2>Enroll in ${course.title}</h2>
-          <p class="muted">Demo payment for ₹${brandConfig.coursePrice}. Production checkout will support UPI, cards, net banking, and wallets through ${brandConfig.paymentGateway}.</p>
-          <div class="field"><label>UPI ID or mobile number</label><input id="upi" value="learner@upi" /></div>
-          <button class="primary-btn" onclick="completePayment('${course.id}')">Pay ₹${brandConfig.coursePrice} and start</button>
+          <p class="muted">Pay ₹${brandConfig.coursePrice} with the Cashfree test payment link. After payment, return here and confirm to unlock the course.</p>
+          <div class="payment-steps">
+            <div><strong>1</strong><span>Open Cashfree test checkout</span></div>
+            <div><strong>2</strong><span>Complete the test payment</span></div>
+            <div><strong>3</strong><span>Return here and unlock the course</span></div>
+          </div>
+          <button class="primary-btn" onclick="openPaymentLink('${course.id}')">Open Cashfree payment</button>
+          <button class="secondary-btn" onclick="completePayment('${course.id}')">I have paid, unlock course</button>
+          <p class="muted" style="font-size:12px">Launch note: this is a test link flow. Real launch should verify Cashfree payment on the backend before unlock.</p>
           <button class="ghost-btn" onclick="closeModal()">Cancel</button>
         </div>
       </div>
@@ -1042,9 +1049,9 @@ function modal() {
           <button class="${state.authMode === "login" ? "active" : ""}" onclick="setAuthMode('login')">Login</button>
           <button class="${state.authMode === "signup" ? "active" : ""}" onclick="setAuthMode('signup')">Create account</button>
         </div>
-        <div class="field ${state.authMode === "login" ? "hide" : ""}"><label>Full name</label><input id="name" value="Aarav Sharma" /></div>
-        <div class="field"><label>Email</label><input id="email" type="email" value="aarav@example.com" /></div>
-        <div class="field"><label>Password</label><input id="password" type="password" value="learn1234" /></div>
+        <div class="field ${state.authMode === "login" ? "hide" : ""}"><label>Full name</label><input id="name" autocomplete="name" placeholder="Enter your full name" /></div>
+        <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+        <div class="field"><label>Password</label><input id="password" type="password" autocomplete="${state.authMode === "signup" ? "new-password" : "current-password"}" placeholder="Enter password" /></div>
         <button class="primary-btn" onclick="completeLogin()">${state.authMode === "signup" ? "Create account" : "Login"}</button>
         <button class="ghost-btn" onclick="closeModal()">Cancel</button>
       </div>
@@ -1099,10 +1106,22 @@ function startCourse(courseId) {
   });
 }
 
+function openPaymentLink(courseId) {
+  sessionStorage.setItem("learnindians-pending-payment", courseId);
+  window.open(brandConfig.paymentLink, "_blank", "noopener,noreferrer");
+  showToast("Cashfree checkout opened. Return here after payment.");
+}
+
 function completePayment(courseId) {
+  const pending = sessionStorage.getItem("learnindians-pending-payment");
+  if (brandConfig.paymentLink && pending !== courseId) {
+    showToast("Please open the Cashfree payment link first.");
+    return;
+  }
   setProgress(courseId, { paid: true });
+  sessionStorage.removeItem("learnindians-pending-payment");
   state.modal = null;
-  showToast("Payment successful. Course unlocked.");
+  showToast("Payment marked complete. Course unlocked.");
   navigate("learn", courseId);
 }
 
@@ -1161,6 +1180,11 @@ async function completeLogin() {
   const next = state.modal.next;
 
   if (isCloudReady()) {
+    if (!email || !password || (state.authMode === "signup" && !name)) {
+      showToast("Please enter all required details.");
+      return;
+    }
+
     const authCall =
       state.authMode === "signup"
         ? supabaseClient.auth.signUp({
@@ -1172,7 +1196,17 @@ async function completeLogin() {
 
     const { data, error } = await authCall;
     if (error) {
-      showToast(error.message);
+      const message = error.message.toLowerCase().includes("rate")
+        ? "Supabase email limit reached. Disable email confirmation for MVP or wait a few minutes."
+        : error.message;
+      showToast(message);
+      return;
+    }
+
+    if (state.authMode === "signup" && data.user && !data.session) {
+      state.modal = null;
+      showToast("Account created. Check your email to confirm, then login.");
+      render();
       return;
     }
 
