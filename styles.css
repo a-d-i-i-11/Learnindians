@@ -960,6 +960,10 @@ h2 {
   padding: 22px;
 }
 
+.payment-modal {
+  width: min(620px, 100%);
+}
+
 .field {
   display: grid;
   gap: 8px;
@@ -1022,6 +1026,42 @@ h2 {
 .payment-steps span {
   color: var(--muted);
   font-weight: 800;
+}
+
+.upi-box {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.upi-box img {
+  width: 180px;
+  height: 180px;
+  border: 8px solid #fff;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.upi-box h3 {
+  margin: 12px 0 8px;
+}
+
+.pay-link {
+  text-decoration: none;
+}
+
+.status-box {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
 }
 
 .field label {
@@ -1157,6 +1197,15 @@ h2 {
   .footer-links {
     justify-content: flex-start;
     margin-top: 16px;
+  }
+
+  .upi-box {
+    grid-template-columns: 1fr;
+  }
+
+  .upi-box img {
+    width: min(220px, 100%);
+    height: auto;
   }
 }
 
