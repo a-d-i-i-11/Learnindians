@@ -213,8 +213,9 @@ const brandConfig = {
   supportEmail: "info@hirenix.co",
   futureDomains: ["learnindians.in", "learnindians.com", "getlearnindians.com"],
   temporaryDomain: "learnindians.vercel.app",
-  paymentGateway: "Cashfree",
-  paymentLink: "https://payments-test.cashfree.com/links?code=Xadu9fjobjl0_AAAAAACpGe0",
+  paymentGateway: "Manual UPI",
+  paymentLink: "",
+  upiId: "6006538459@axl",
   businessName: "LearnIndians",
   coursePrice: 49,
   subscriptionPrice: 199,
@@ -234,6 +235,8 @@ const state = {
   isAdmin: false,
   publicVerifications: {},
   adminStats: null,
+  paymentRequests: {},
+  adminPaymentRequests: [],
   theme: localStorage.getItem("learnindians-theme") || localStorage.getItem("swiftcert-theme") || "light",
   user: JSON.parse(localStorage.getItem("learnindians-user") || localStorage.getItem("swiftcert-user") || "null"),
   progress: JSON.parse(localStorage.getItem("learnindians-progress") || localStorage.getItem("swiftcert-progress") || "{}"),
@@ -328,9 +331,10 @@ async function hydrateCloudUser(authUser, preferredName = "") {
 
 async function loadCloudData() {
   if (!isCloudReady() || !state.user?.id) return;
-  const [{ data: enrollments }, { data: certificates }] = await Promise.all([
+  const [{ data: enrollments }, { data: certificates }, { data: paymentRequests }] = await Promise.all([
     supabaseClient.from("enrollments").select("*").eq("user_id", state.user.id),
     supabaseClient.from("certificates").select("*").eq("user_id", state.user.id),
+    supabaseClient.from("payment_requests").select("*").eq("user_id", state.user.id),
   ]);
 
   state.progress = {};
@@ -353,6 +357,17 @@ async function loadCloudData() {
       issuer: row.issuer,
       board: row.board,
     };
+  });
+
+  state.paymentRequests = {};
+  (paymentRequests || []).forEach((row) => {
+    state.paymentRequests[row.course_id] = row;
+    if (row.status === "approved") {
+      state.progress[row.course_id] = {
+        ...getProgress(row.course_id),
+        paid: true,
+      };
+    }
   });
 }
 
@@ -384,6 +399,45 @@ async function syncCertificate(courseId, cert) {
   });
 }
 
+async function createPaymentRequest(courseId, utr) {
+  const course = courses.find((item) => item.id === courseId);
+  const request = {
+    user_id: state.user.id,
+    student_name: state.user.name,
+    user_email: state.user.email,
+    course_id: courseId,
+    course_title: course.title,
+    amount: brandConfig.coursePrice,
+    upi_id: brandConfig.upiId,
+    utr,
+    status: "pending",
+    updated_at: new Date().toISOString(),
+  };
+
+  if (isCloudReady() && state.user?.id) {
+    const { data, error } = await supabaseClient
+      .from("payment_requests")
+      .upsert(request, { onConflict: "user_id,course_id" })
+      .select()
+      .single();
+
+    if (error) {
+      showToast(error.message);
+      return false;
+    }
+    state.paymentRequests[courseId] = data;
+  } else {
+    state.paymentRequests[courseId] = {
+      ...request,
+      user_email: state.user?.email,
+      student_name: state.user?.name,
+    };
+  }
+
+  save();
+  return true;
+}
+
 async function loadPublicCertificate(id) {
   if (!isCloudReady() || state.publicVerifications[id]) return;
   const { data } = await supabaseClient
@@ -408,10 +462,11 @@ async function loadPublicCertificate(id) {
 
 async function loadAdminStats() {
   if (!isCloudReady() || !state.isAdmin || state.adminStats) return;
-  const [{ data: profiles }, { data: enrollments }, { data: certificates }] = await Promise.all([
+  const [{ data: profiles }, { data: enrollments }, { data: certificates }, { data: requests }] = await Promise.all([
     supabaseClient.from("profiles").select("id,email,full_name,role"),
     supabaseClient.from("enrollments").select("course_id,paid,quiz_passed"),
     supabaseClient.from("certificates").select("id,course_id"),
+    supabaseClient.from("payment_requests").select("*").order("created_at", { ascending: false }),
   ]);
 
   state.adminStats = {
@@ -419,7 +474,9 @@ async function loadAdminStats() {
     enrollments: enrollments?.filter((item) => item.paid).length || 0,
     completions: enrollments?.filter((item) => item.quiz_passed).length || 0,
     certificates: certificates?.length || 0,
+    pendingPayments: requests?.filter((item) => item.status === "pending").length || 0,
   };
+  state.adminPaymentRequests = requests || [];
   render();
 }
 
@@ -452,6 +509,10 @@ function requireUser(next) {
 
 function getProgress(courseId) {
   return state.progress[courseId] || { paid: false, completedModules: [], quizPassed: false };
+}
+
+function getPaymentRequest(courseId) {
+  return state.paymentRequests[courseId] || null;
 }
 
 function setProgress(courseId, patch) {
@@ -642,6 +703,8 @@ function coursesView() {
 
 function courseCard(course) {
   const progress = getProgress(course.id);
+  const request = getPaymentRequest(course.id);
+  const cta = progress.paid ? "Continue" : request?.status === "pending" ? "Payment pending" : "Enroll now";
   return `
     <article class="course-card">
       <div>
@@ -658,7 +721,7 @@ function courseCard(course) {
         </div>
         <div class="bar"><span style="width:${percent(course)}%"></span></div>
       </div>
-      <button class="primary-btn" onclick="startCourse('${course.id}')">${progress.paid ? "Continue" : "Enroll now"}</button>
+      <button class="primary-btn" onclick="startCourse('${course.id}')">${cta}</button>
     </article>
   `;
 }
@@ -683,6 +746,7 @@ function dashboardView() {
           <div class="progress-item"><strong>Subscription</strong><p class="muted">₹${brandConfig.subscriptionPrice} monthly unlimited access</p></div>
           <div class="progress-item"><strong>${Object.keys(state.certificates).length}</strong><p class="muted">Certificates earned</p></div>
           <div class="progress-item"><strong>${isCloudReady() ? "Live" : "Demo"}</strong><p class="muted">${isCloudReady() ? "Data saved in Supabase" : "Add Supabase keys for real storage"}</p></div>
+          <div class="progress-item"><strong>${Object.values(state.paymentRequests).filter((item) => item.status === "pending").length}</strong><p class="muted">Pending payment checks</p></div>
         </div>
       </aside>
       <div class="panel content-panel">
@@ -701,14 +765,16 @@ function dashboardView() {
 
 function progressRow(course) {
   const done = percent(course);
+  const request = getPaymentRequest(course.id);
   return `
     <div class="table-row">
       <div>
         <strong>${course.title}</strong>
+        ${request?.status === "pending" ? `<p class="muted">Payment submitted. Waiting for admin verification.</p>` : ""}
         <div class="bar" style="margin-top:10px"><span style="width:${done}%"></span></div>
       </div>
-      <span class="pill">${done}%</span>
-      <button class="${done === 100 ? "secondary-btn" : "primary-btn"}" onclick="${done === 100 ? `openCertificate('${course.id}')` : `startCourse('${course.id}')`}">${done === 100 ? "Certificate" : "Continue"}</button>
+      <span class="pill">${request?.status === "pending" ? "Pending" : `${done}%`}</span>
+      <button class="${done === 100 ? "secondary-btn" : "primary-btn"}" onclick="${done === 100 ? `openCertificate('${course.id}')` : `startCourse('${course.id}')`}">${done === 100 ? "Certificate" : request?.status === "pending" ? "Check status" : "Continue"}</button>
     </div>
   `;
 }
@@ -887,7 +953,11 @@ function adminView() {
         <div class="admin-card"><strong>${stats.users}</strong><span class="muted">Users</span></div>
         <div class="admin-card"><strong>${stats.enrollments}</strong><span class="muted">Paid enrollments</span></div>
         <div class="admin-card"><strong>${stats.completions}</strong><span class="muted">Completions</span></div>
-        <div class="admin-card"><strong>${stats.certificates}</strong><span class="muted">Certificates issued</span></div>
+        <div class="admin-card"><strong>${stats.pendingPayments || 0}</strong><span class="muted">Pending payments</span></div>
+      </div>
+      <div class="panel content-panel" style="margin-bottom:16px">
+        <h3>Manual UPI payment verification</h3>
+        ${paymentRequestsTable()}
       </div>
       <div class="panel content-panel">
         <h3>Course performance</h3>
@@ -901,6 +971,24 @@ function adminView() {
       </div>
     </section>
   `;
+}
+
+function paymentRequestsTable() {
+  const requests = state.adminPaymentRequests.length ? state.adminPaymentRequests : Object.values(state.paymentRequests);
+  if (!requests.length) {
+    return emptyInline("No manual UPI payment requests yet.");
+  }
+
+  return requests.map((request) => `
+    <div class="table-row">
+      <div>
+        <strong>${request.student_name || request.user_email || "Learner"}</strong>
+        <p class="muted">${request.course_title} · ₹${request.amount} · UTR: ${request.utr}</p>
+      </div>
+      <span class="pill">${request.status}</span>
+      ${request.status === "pending" ? `<button class="primary-btn" onclick="approvePaymentRequest('${request.id || ""}', '${request.user_id || ""}', '${request.course_id}')">Approve</button>` : `<span class="pill">Done</span>`}
+    </div>
+  `).join("");
 }
 
 function aboutView() {
@@ -1020,20 +1108,34 @@ function bottomNav() {
 function modal() {
   if (state.modal.type === "pay") {
     const course = courses.find((item) => item.id === state.modal.courseId);
+    const upiLink = buildUpiLink(course);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
+    const request = getPaymentRequest(course.id);
     return `
       <div class="modal-backdrop">
-        <div class="panel modal">
-          <p class="eyebrow">${brandConfig.paymentGateway} checkout</p>
+        <div class="panel modal payment-modal">
+          <p class="eyebrow">Manual UPI verification</p>
           <h2>Enroll in ${course.title}</h2>
-          <p class="muted">Pay ₹${brandConfig.coursePrice} with the Cashfree test payment link. After payment, return here and confirm to unlock the course.</p>
-          <div class="payment-steps">
-            <div><strong>1</strong><span>Open Cashfree test checkout</span></div>
-            <div><strong>2</strong><span>Complete the test payment</span></div>
-            <div><strong>3</strong><span>Return here and unlock the course</span></div>
+          <p class="muted">Pay ₹${brandConfig.coursePrice} to ${brandConfig.businessName}, then enter the UTR/reference number. Admin approval unlocks the course.</p>
+          <div class="upi-box">
+            <img src="${qrUrl}" alt="UPI payment QR for ${brandConfig.businessName}" />
+            <div>
+              <span class="badge">UPI ID</span>
+              <h3>${brandConfig.upiId}</h3>
+              <p class="muted">Amount: ₹${brandConfig.coursePrice}</p>
+              <a class="primary-btn pay-link" href="${upiLink}">Open UPI App</a>
+            </div>
           </div>
-          <button class="primary-btn" onclick="openPaymentLink('${course.id}')">Open Cashfree payment</button>
-          <button class="secondary-btn" onclick="completePayment('${course.id}')">I have paid, unlock course</button>
-          <p class="muted" style="font-size:12px">Launch note: this is a test link flow. Real launch should verify Cashfree payment on the backend before unlock.</p>
+          <div class="payment-steps">
+            <div><strong>1</strong><span>Scan QR or open UPI app</span></div>
+            <div><strong>2</strong><span>Pay exactly ₹${brandConfig.coursePrice}</span></div>
+            <div><strong>3</strong><span>Submit UTR for admin verification</span></div>
+          </div>
+          ${request?.status === "pending" ? `<div class="status-box"><strong>Payment request submitted</strong><p class="muted">UTR ${request.utr} is waiting for admin approval.</p></div>` : `
+            <div class="field"><label>UTR / Transaction Reference Number</label><input id="utr" placeholder="Enter UPI UTR after payment" /></div>
+            <button class="primary-btn" onclick="submitManualPayment('${course.id}')">Submit payment for verification</button>
+          `}
+          <p class="muted" style="font-size:12px">For automatic verification later, connect Cashfree/PayU webhooks. This manual flow is for launch while gateway approval is pending.</p>
           <button class="ghost-btn" onclick="closeModal()">Cancel</button>
         </div>
       </div>
@@ -1083,6 +1185,17 @@ function qrMarkup(seed) {
   return `<div class="qr" aria-label="QR verification code">${bits}</div>`;
 }
 
+function buildUpiLink(course) {
+  const params = new URLSearchParams({
+    pa: brandConfig.upiId,
+    pn: brandConfig.businessName,
+    am: String(brandConfig.coursePrice),
+    cu: "INR",
+    tn: `${brandConfig.platformName} - ${course.title}`,
+  });
+  return `upi://pay?${params.toString()}`;
+}
+
 function toggleTheme() {
   state.theme = state.theme === "dark" ? "light" : "dark";
   save();
@@ -1106,23 +1219,63 @@ function startCourse(courseId) {
   });
 }
 
-function openPaymentLink(courseId) {
-  sessionStorage.setItem("learnindians-pending-payment", courseId);
-  window.open(brandConfig.paymentLink, "_blank", "noopener,noreferrer");
-  showToast("Cashfree checkout opened. Return here after payment.");
-}
-
-function completePayment(courseId) {
-  const pending = sessionStorage.getItem("learnindians-pending-payment");
-  if (brandConfig.paymentLink && pending !== courseId) {
-    showToast("Please open the Cashfree payment link first.");
+async function submitManualPayment(courseId) {
+  const utr = document.querySelector("#utr")?.value.trim();
+  if (!utr || utr.length < 6) {
+    showToast("Enter a valid UTR or transaction reference number.");
     return;
   }
-  setProgress(courseId, { paid: true });
-  sessionStorage.removeItem("learnindians-pending-payment");
+
+  const created = await createPaymentRequest(courseId, utr);
+  if (!created) return;
+
   state.modal = null;
-  showToast("Payment marked complete. Course unlocked.");
-  navigate("learn", courseId);
+  showToast("Payment submitted. Course unlocks after admin approval.");
+  navigate("dashboard");
+}
+
+async function approvePaymentRequest(requestId, userId, courseId) {
+  if (!state.isAdmin) return;
+  if (!isCloudReady()) {
+    setProgress(courseId, { paid: true });
+    showToast("Payment approved in demo mode.");
+    render();
+    return;
+  }
+
+  const { error: requestError } = await supabaseClient
+    .from("payment_requests")
+    .update({
+      status: "approved",
+      approved_by: state.user.id,
+      approved_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+
+  if (requestError) {
+    showToast(requestError.message);
+    return;
+  }
+
+  const { error: enrollmentError } = await supabaseClient.from("enrollments").upsert({
+    user_id: userId,
+    course_id: courseId,
+    paid: true,
+    completed_modules: [],
+    quiz_passed: false,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (enrollmentError) {
+    showToast(enrollmentError.message);
+    return;
+  }
+
+  state.adminStats = null;
+  state.adminPaymentRequests = [];
+  showToast("Payment approved. Course unlocked for learner.");
+  render();
 }
 
 function completeModule(courseId, moduleIndex) {
