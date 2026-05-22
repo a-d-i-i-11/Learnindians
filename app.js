@@ -206,7 +206,7 @@ const brandConfig = {
   platformName: "LearnIndians",
   tagline: "Learn Fast. Get Certified.",
   initials: "LI",
-  companyName: "LearnIndians Academy",
+companyName: "LearnIndians Academy\nAn initiative of Hirenix Group Pvt Ltd",
   issuerName: "LearnIndians Academy",
   certificationBoard: "LearnIndians Academy",
   signatureName: "Founder & Director",
