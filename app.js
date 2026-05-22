@@ -1250,7 +1250,7 @@ function modal() {
             <div class="field"><label>UTR / Transaction Reference Number</label><input id="utr" placeholder="Enter UPI UTR after payment" /></div>
             <button class="primary-btn" onclick="submitManualPayment('${course.id}')">Submit payment for verification</button>
           `}
-          <p class="muted" style="font-size:12px">For automatic verification later, connect Cashfree/PayU webhooks. This manual flow is for launch while gateway approval is pending.</p>
+          <p class="muted" style="font-size:12px">Payment taken 5 to 10 mintues to verify please refersh after payment done.</p>
           <button class="ghost-btn" onclick="closeModal()">Cancel</button>
         </div>
       </div>
