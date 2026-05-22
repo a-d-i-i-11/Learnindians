@@ -150,4 +150,4 @@ using (public.is_admin())
 with check (public.is_admin());
 
 -- After your admin user signs up, run this with that user's email:
--- update public.profiles set role = 'admin' where email = 'info@hirenix.co';
+-- update public.profiles set role = 'admin' where email = 'Khanadnanofficial432@gmail.com';
