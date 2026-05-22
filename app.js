@@ -401,40 +401,49 @@ async function syncCertificate(courseId, cert) {
 
 async function createPaymentRequest(courseId, utr) {
   const course = courses.find((item) => item.id === courseId);
+
+  const cleanUtr = String(utr).trim();
+
+  if (!cleanUtr || cleanUtr.length < 6) {
+    showToast("Enter a valid UTR/reference number.");
+    return false;
+  }
+
   const request = {
-    user_id: state.user.id,
-    student_name: state.user.name,
-    user_email: state.user.email,
+    id: crypto.randomUUID(),
+    user_id: state.user?.id || crypto.randomUUID(),
+    student_name: state.user?.name || "Learner",
+    user_email: state.user?.email || "",
     course_id: courseId,
     course_title: course.title,
     amount: brandConfig.coursePrice,
     upi_id: brandConfig.upiId,
-    utr,
+    utr: cleanUtr,
     status: "pending",
+    created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
   if (isCloudReady() && state.user?.id) {
     const { data, error } = await supabaseClient
       .from("payment_requests")
-      .upsert(request, { onConflict: "user_id,course_id" })
+      .upsert(request)
       .select()
       .single();
 
     if (error) {
-      showToast(error.message);
+      console.error(error);
+      showToast("Payment request failed.");
       return false;
     }
+
     state.paymentRequests[courseId] = data;
   } else {
-    state.paymentRequests[courseId] = {
-      ...request,
-      user_email: state.user?.email,
-      student_name: state.user?.name,
-    };
+    state.paymentRequests[courseId] = request;
   }
 
   save();
+  showToast("Payment submitted successfully.");
   return true;
 }
 
@@ -585,13 +594,25 @@ function topbar() {
         <span class="mark li-mark"><span>${brandConfig.initials}</span></span>
         <span>${brandConfig.platformName}</span>
       </button>
+
       <div class="nav-actions">
         <button class="ghost-btn" onclick="navigate('courses')">Courses</button>
         <button class="ghost-btn" onclick="navigate('dashboard')">Dashboard</button>
         <button class="ghost-btn" onclick="navigate('about')">About</button>
-        <button class="ghost-btn" onclick="navigate('admin')">Admin</button>
-        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">${state.theme === "dark" ? icon("sun") : icon("moon")}</button>
-        <button class="secondary-btn" onclick="openLogin()">${state.user ? state.user.name.split(" ")[0] : "Login"}</button>
+
+        ${
+          state.isAdmin
+            ? `<button class="ghost-btn" onclick="navigate('admin')">Admin</button>`
+            : ""
+        }
+
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+          ${state.theme === "dark" ? icon("sun") : icon("moon")}
+        </button>
+
+        <button class="secondary-btn" onclick="openLogin()">
+          ${state.user ? state.user.name.split(" ")[0] : "Login"}
+        </button>
       </div>
     </header>
   `;
