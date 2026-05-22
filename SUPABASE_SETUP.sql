@@ -151,3 +151,50 @@ with check (public.is_admin());
 
 -- After your admin user signs up, run this with that user's email:
 -- update public.profiles set role = 'admin' where email = 'Khanadnanofficial432@gmail.com';
+create table if not exists payment_requests (
+  id uuid primary key default gen_random_uuid(),
+
+  user_id uuid,
+
+  student_name text,
+  user_email text,
+
+  course_id text,
+  course_title text,
+
+  amount integer,
+
+  upi_id text,
+  utr text,
+
+  status text default 'pending',
+
+  approved_by uuid,
+
+  approved_at timestamptz,
+
+  created_at timestamptz default now(),
+
+  updated_at timestamptz default now()
+);
+
+alter table payment_requests enable row level security;
+
+create policy "Users can insert payment requests"
+on payment_requests
+for insert
+to authenticated
+with check (true);
+
+create policy "Users can view own payment requests"
+on payment_requests
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "Admins can manage payment requests"
+on payment_requests
+for all
+to authenticated
+using (true)
+with check (true);
