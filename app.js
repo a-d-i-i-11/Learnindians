@@ -427,7 +427,7 @@ async function createPaymentRequest(courseId, utr) {
   if (isCloudReady() && state.user?.id) {
     const { data, error } = await supabaseClient
       .from("payment_requests")
-      .upsert(request)
+      .insert(request)
       .select()
       .single();
 
@@ -470,7 +470,7 @@ async function loadPublicCertificate(id) {
 }
 
 async function loadAdminStats() {
-  if (!isCloudReady() || !state.isAdmin || state.adminStats) return;
+ if (!isCloudReady() || !state.isAdmin) return;
   const [{ data: profiles }, { data: enrollments }, { data: certificates }, { data: requests }] = await Promise.all([
     supabaseClient.from("profiles").select("id,email,full_name,role"),
     supabaseClient.from("enrollments").select("course_id,paid,quiz_passed"),
@@ -506,7 +506,35 @@ function showToast(message) {
     render();
   }, 2600);
 }
+function showSuccessAnimation(title, message) {
 
+  const div = document.createElement("div");
+
+  div.className = "success-popup";
+
+  div.innerHTML = `
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <h2>${title}</h2>
+      <p>${message}</p>
+    </div>
+  `;
+
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.classList.add("show");
+  }, 50);
+
+  setTimeout(() => {
+    div.classList.remove("show");
+
+    setTimeout(() => {
+      div.remove();
+    }, 400);
+
+  }, 2600);
+}
 function requireUser(next) {
   if (state.user) {
     next();
@@ -885,7 +913,9 @@ function certificateView() {
           <label>Verification URL</label>
           <input value="${cert.url}" readonly />
         </div>
-        <button class="primary-btn" onclick="window.print()">Print / Save PDF</button>
+        <button class="primary-btn" onclick="downloadCertificate('${cert.id}')">
+  Download Certificate
+</button>
         <button class="secondary-btn" onclick="navigate('verify:${cert.id}')">Open verification</button>
       </aside>
     </section>
@@ -894,28 +924,91 @@ function certificateView() {
 
 function certificateMarkup(cert) {
   return `
-    <article class="certificate">
+    <article class="certificate" id="certificate-${cert.id}">
+      <div class="cert-watermark"></div>
       <div class="cert-border"></div>
+
       <div class="cert-topline">
-        <div class="brand"><span class="mark li-mark"><span>${brandConfig.initials}</span></span><span>${brandConfig.platformName}</span></div>
-        <div class="cert-issuer">${brandConfig.certificationBoard}</div>
-      </div>
-      <div class="cert-title">Professional Certificate</div>
-      <p class="cert-subtitle">This certificate verifies that</p>
-      <div class="cert-name">${cert.name}</div>
-      <div class="cert-course">has successfully completed the career certification in<br><strong>${cert.course}</strong></div>
-      <div class="cert-meta">
-        <div><span>Certificate ID</span><strong>${cert.id}</strong></div>
-        <div><span>Completion Date</span><strong>${cert.date}</strong></div>
-        <div><span>Issuer</span><strong>${brandConfig.issuerName}</strong></div>
-      </div>
-      <div class="cert-foot">
-        <div class="signature">
-          <span class="signature-name">${brandConfig.signatureName}</span>
-          Authorized Signatory<br>${brandConfig.companyName}
+        <div class="brand">
+          <span class="mark li-mark">
+            <span>${brandConfig.initials}</span>
+          </span>
+
+          <span>${brandConfig.platformName}</span>
         </div>
-        <div class="seal">LEARN<br>INDIANS<br>VERIFIED</div>
-        <div class="qr-block">${qrMarkup(cert.id)}<p class="muted" style="font-size:12px">Scan to verify<br>${cert.url}</p></div>
+
+        <div class="cert-issuer">
+          ${brandConfig.certificationBoard}
+        </div>
+      </div>
+
+      <div class="cert-title">
+        Professional Certificate
+      </div>
+
+      <p class="cert-subtitle">
+        This certificate officially verifies that
+      </p>
+
+      <div class="cert-name">
+        ${cert.name}
+      </div>
+
+      <div class="cert-course">
+        has successfully completed the certified professional program in
+        <br>
+        <strong>${cert.course}</strong>
+      </div>
+
+      <div class="cert-meta">
+        <div>
+          <span>Certificate ID</span>
+          <strong>${cert.id}</strong>
+        </div>
+
+        <div>
+          <span>Completion Date</span>
+          <strong>${cert.date}</strong>
+        </div>
+
+        <div>
+          <span>Issued By</span>
+          <strong>${brandConfig.issuerName}</strong>
+        </div>
+      </div>
+
+      <div class="cert-foot">
+
+        <div class="signature">
+          <span class="signature-name">
+            ${brandConfig.signatureName}
+          </span>
+
+          <div class="signature-line"></div>
+
+          Authorized Signatory
+          <br>
+
+          ${brandConfig.companyName}
+        </div>
+
+        <div class="seal">
+          VERIFIED
+        </div>
+
+        <div class="qr-block">
+
+          <img
+            src=\"https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(cert.url)}\"
+            alt=\"QR Code\"
+          />
+
+          <p class="muted cert-verify-text">
+            Scan to verify
+        
+          </p>
+          
+        </div>
       </div>
     </article>
   `;
@@ -1047,6 +1140,7 @@ function contactView() {
     </section>
   `;
 }
+
 
 function legalView(type) {
   const pages = {
@@ -1241,25 +1335,70 @@ function startCourse(courseId) {
 }
 
 async function submitManualPayment(courseId) {
+
+  const button = event.target;
+
   const utr = document.querySelector("#utr")?.value.trim();
+
   if (!utr || utr.length < 6) {
     showToast("Enter a valid UTR or transaction reference number.");
     return;
   }
 
+  button.disabled = true;
+
+  button.innerHTML = `
+    <span class="loader"></span>
+    Verifying Payment...
+  `;
+
+
   const created = await createPaymentRequest(courseId, utr);
-  if (!created) return;
+
+  if (!created) {
+    button.disabled = false;
+    button.innerHTML = "Submit payment for verification";
+    return;
+  }
 
   state.modal = null;
-  showToast("Payment submitted. Course unlocks after admin approval.");
+
+  render();
+
+  showSuccessAnimation(
+    "Payment Submitted",
+    "Your payment was submitted successfully and is waiting for admin approval."
+  );
+
+  state.adminStats = null;
+  state.adminPaymentRequests = [];
+
+  await loadAdminStats();
+
   navigate("dashboard");
 }
 
 async function approvePaymentRequest(requestId, userId, courseId) {
+
   if (!state.isAdmin) return;
+
+  const button = event.target;
+
+  button.disabled = true;
+
+  button.innerHTML = `
+    <span class="loader"></span>
+    Approving...
+  `;
+
   if (!isCloudReady()) {
     setProgress(courseId, { paid: true });
-    showToast("Payment approved in demo mode.");
+
+    showSuccessAnimation(
+      "Course Unlocked",
+      "Payment approved successfully."
+    );
+
     render();
     return;
   }
@@ -1279,14 +1418,16 @@ async function approvePaymentRequest(requestId, userId, courseId) {
     return;
   }
 
-  const { error: enrollmentError } = await supabaseClient.from("enrollments").upsert({
-    user_id: userId,
-    course_id: courseId,
-    paid: true,
-    completed_modules: [],
-    quiz_passed: false,
-    updated_at: new Date().toISOString(),
-  });
+  const { error: enrollmentError } = await supabaseClient
+    .from("enrollments")
+    .upsert({
+      user_id: userId,
+      course_id: courseId,
+      paid: true,
+      completed_modules: [],
+      quiz_passed: false,
+      updated_at: new Date().toISOString(),
+    });
 
   if (enrollmentError) {
     showToast(enrollmentError.message);
@@ -1295,10 +1436,16 @@ async function approvePaymentRequest(requestId, userId, courseId) {
 
   state.adminStats = null;
   state.adminPaymentRequests = [];
-  showToast("Payment approved. Course unlocked for learner.");
+
+  await loadAdminStats();
+
+  showSuccessAnimation(
+    "Course Approved",
+    "The learner now has access to the course."
+  );
+
   render();
 }
-
 function completeModule(courseId, moduleIndex) {
   const progress = getProgress(courseId);
   const completedModules = [...new Set([...progress.completedModules, moduleIndex])];
@@ -1386,6 +1533,8 @@ async function completeLogin() {
 
     if (data.user) {
       await hydrateCloudUser(data.user, name);
+
+      await loadAdminStats();
     }
   } else {
     state.user = { name, email };
@@ -1421,3 +1570,41 @@ window.addEventListener("hashchange", () => {
 
 render();
 initAuth();
+function downloadCertificate(certId) {
+
+  const certificate = document.getElementById(`certificate-${certId}`);
+
+  if (!certificate) {
+    showToast("Certificate not found.");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Certificate</title>
+
+        <link rel="stylesheet" href="styles.css">
+
+        <style>
+          body {
+            margin: 0;
+            background: white;
+          }
+        </style>
+      </head>
+
+      <body>
+        ${certificate.outerHTML}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  setTimeout(() => {
+    printWindow.print();
+  }, 700);
+}
