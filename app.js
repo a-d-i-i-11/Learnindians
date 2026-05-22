@@ -1003,8 +1003,8 @@ function certificateMarkup(cert) {
           />
 
           <p class="muted cert-verify-text">
-            Scan to verify
-        
+      
+        Verified at learnindians.online
           </p>
           
         </div>
