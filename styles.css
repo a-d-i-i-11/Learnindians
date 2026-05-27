@@ -2032,3 +2032,778 @@ h2 {
   box-shadow:
     0 8px 28px rgba(15,23,42,0.05);
 }
+/* ===== LEARNINDIANS LUXURY MASTERPIECE UI ===== */
+
+body {
+
+  background:
+    radial-gradient(circle at 10% 20%,
+      rgba(15,118,110,0.16),
+      transparent 24%),
+
+    radial-gradient(circle at 90% 10%,
+      rgba(37,99,235,0.18),
+      transparent 26%),
+
+    radial-gradient(circle at 50% 80%,
+      rgba(212,175,55,0.10),
+      transparent 28%),
+
+    linear-gradient(
+      180deg,
+      #f8fbff 0%,
+      #eef4ff 100%
+    ) !important;
+
+  background-attachment: fixed;
+}
+
+/* GLOBAL GLOW */
+
+body::before {
+
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(255,255,255,0.75),
+      transparent 38%);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* HERO SECTION */
+
+.hero-section {
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.hero-section::before {
+
+  content: "";
+
+  position: absolute;
+
+  width: 420px;
+  height: 420px;
+
+  top: -160px;
+  right: -120px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(circle,
+      rgba(37,99,235,0.22),
+      transparent 70%);
+
+  filter: blur(20px);
+
+  pointer-events: none;
+}
+
+.hero-section::after {
+
+  content: "";
+
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  bottom: -120px;
+  left: -120px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(circle,
+      rgba(15,118,110,0.18),
+      transparent 70%);
+
+  filter: blur(20px);
+
+  pointer-events: none;
+}
+
+/* PREMIUM CARDS */
+
+.course-card,
+.panel,
+.metric,
+.stats-card {
+
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,0.68) !important;
+
+  backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,0.35);
+
+  border-radius: 28px !important;
+
+  box-shadow:
+    0 10px 40px rgba(15,23,42,0.08);
+
+  transition:
+    all .35s ease;
+}
+
+/* LIGHT REFLECTION */
+
+.course-card::before,
+.panel::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 60%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.42),
+      transparent
+    );
+
+  transform: skewX(-20deg);
+
+  transition: .8s;
+}
+
+.course-card:hover::before,
+.panel:hover::before {
+
+  left: 140%;
+}
+
+.course-card:hover {
+
+  transform:
+    translateY(-8px);
+
+  box-shadow:
+    0 28px 60px rgba(37,99,235,0.16);
+
+  border-color:
+    rgba(37,99,235,0.16);
+}
+
+/* BUTTONS */
+
+.primary-btn,
+.course-card button {
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E,
+      #2563EB
+    ) !important;
+
+  border: none !important;
+
+  border-radius: 18px !important;
+
+  color: white;
+
+  font-weight: 700;
+
+  box-shadow:
+    0 12px 30px rgba(37,99,235,0.28);
+
+  transition:
+    all .28s ease;
+}
+
+.primary-btn:hover,
+.course-card button:hover {
+
+  transform:
+    translateY(-3px) scale(1.02);
+
+  box-shadow:
+    0 22px 44px rgba(37,99,235,0.32);
+}
+
+/* NAVBAR */
+
+.topbar,
+.navbar {
+
+  background:
+    rgba(255,255,255,0.62) !important;
+
+  backdrop-filter:
+    blur(20px);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.35);
+
+  box-shadow:
+    0 6px 24px rgba(15,23,42,0.04);
+}
+
+/* TITLES */
+
+h1,
+h2,
+.hero-title {
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F172A,
+      #2563EB
+    );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  letter-spacing: -0.04em;
+}
+
+/* BADGES */
+
+.badge,
+.tag,
+.course-tag {
+
+  background:
+    rgba(255,255,255,0.75) !important;
+
+  border:
+    1px solid rgba(15,118,110,0.12);
+
+  color:
+    #0F766E !important;
+
+  backdrop-filter:
+    blur(8px);
+}
+
+/* PREMIUM PHONE MOCKUP */
+
+.phone-preview,
+.mobile-preview {
+
+  background:
+    linear-gradient(
+      180deg,
+      #0F172A,
+      #111827
+    ) !important;
+
+  box-shadow:
+    0 40px 80px rgba(15,23,42,0.22);
+}
+
+/* SECTION SPACING */
+
+section {
+
+  position: relative;
+
+  z-index: 1;
+}
+/* ===== ULTRA PREMIUM COURSE CARDS ===== */
+
+.course-card {
+
+  position: relative;
+
+  overflow: hidden;
+
+  padding: 22px;
+
+  border-radius: 28px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.92),
+      rgba(248,250,255,0.88)
+    ) !important;
+
+  border:
+    1px solid rgba(255,255,255,0.4);
+
+  backdrop-filter:
+    blur(18px);
+
+  box-shadow:
+    0 10px 40px rgba(15,23,42,0.08);
+
+  transition:
+    transform .35s ease,
+    box-shadow .35s ease,
+    border-color .35s ease;
+}
+
+/* TOP GLOW LINE */
+
+.course-card::after {
+
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 6px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #0F766E,
+      #14B8A6,
+      #2563EB
+    );
+}
+
+/* FLOATING LIGHT */
+
+.course-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: -120px;
+  right: -120px;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(37,99,235,0.12),
+      transparent 70%
+    );
+
+  transition: .4s ease;
+}
+
+/* HOVER */
+
+.course-card:hover {
+
+  transform:
+    translateY(-10px)
+    scale(1.015);
+
+  border-color:
+    rgba(37,99,235,0.16);
+
+  box-shadow:
+    0 30px 70px rgba(37,99,235,0.16);
+}
+
+.course-card:hover::before {
+
+  transform:
+    scale(1.2);
+}
+
+/* TITLE */
+
+.course-card h3,
+.course-card h2 {
+
+  font-size: 34px;
+
+  line-height: 1.05;
+
+  font-weight: 800;
+
+  letter-spacing: -0.04em;
+
+  margin-bottom: 14px;
+
+  color: #0F172A;
+}
+
+/* DESCRIPTION */
+
+.course-card p {
+
+  color:
+    #64748B;
+
+  line-height: 1.7;
+
+  font-size: 15px;
+}
+
+/* TAGS */
+
+.course-card .tag,
+.course-card .badge,
+.course-card span {
+
+  background:
+    rgba(15,118,110,0.08) !important;
+
+  border:
+    1px solid rgba(15,118,110,0.10);
+
+  color:
+    #0F766E !important;
+
+  border-radius:
+    999px !important;
+
+  font-weight: 600;
+
+  padding:
+    7px 12px;
+}
+
+/* PRICE BADGE */
+
+.course-card .price,
+.course-card .amount {
+
+  background:
+    linear-gradient(
+      135deg,
+      #FDE68A,
+      #FBBF24
+    ) !important;
+
+  color:
+    #78350F !important;
+
+  font-weight: 800;
+
+  box-shadow:
+    0 6px 18px rgba(251,191,36,0.28);
+}
+
+/* BUTTON */
+
+.course-card button,
+.course-card .primary-btn {
+
+  height: 54px;
+
+  border-radius: 18px !important;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  border: none !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E,
+      #2563EB
+    ) !important;
+
+  box-shadow:
+    0 12px 28px rgba(37,99,235,0.24);
+
+  transition:
+    all .28s ease;
+}
+
+.course-card button:hover,
+.course-card .primary-btn:hover {
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 20px 40px rgba(37,99,235,0.34);
+}
+
+/* PROGRESS BAR */
+
+.course-card progress,
+.course-card .progress-bar {
+
+  height: 10px !important;
+
+  border-radius:
+    999px !important;
+
+  overflow: hidden;
+}
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .course-card {
+
+    border-radius:
+      24px !important;
+
+    padding:
+      18px;
+  }
+
+  .course-card h3,
+  .course-card h2 {
+
+    font-size:
+      28px;
+  }
+}
+/* ===== LUXURY BACKGROUND + PREMIUM HEADER ===== */
+
+/* GLOBAL BACKGROUND */
+
+body {
+
+  background:
+
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(15,118,110,0.18),
+      transparent 22%
+    ),
+
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(37,99,235,0.20),
+      transparent 24%
+    ),
+
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(212,175,55,0.10),
+      transparent 28%
+    ),
+
+    linear-gradient(
+      180deg,
+      #f8fbff 0%,
+      #edf4ff 100%
+    ) !important;
+
+  background-attachment: fixed;
+}
+
+/* PREMIUM FLOATING HEADER */
+
+.topbar,
+.navbar,
+header {
+
+  position: sticky;
+
+  top: 14px;
+
+  z-index: 999;
+
+  margin-inline: 18px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(15,23,42,0.88),
+      rgba(30,41,59,0.82)
+    ) !important;
+
+  backdrop-filter:
+    blur(22px);
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 20px 45px rgba(15,23,42,0.18);
+
+  padding:
+    14px 24px !important;
+}
+
+/* HEADER GLOW */
+
+.topbar::before,
+.navbar::before,
+header::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  padding: 1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(20,184,166,0.45),
+      rgba(37,99,235,0.45)
+    );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite: xor;
+
+  pointer-events: none;
+}
+
+/* NAV BUTTONS */
+
+.topbar button,
+.navbar button,
+header button,
+nav button {
+
+  background:
+    rgba(255,255,255,0.06) !important;
+
+  border:
+    1px solid rgba(255,255,255,0.08) !important;
+
+  color:
+    white !important;
+
+  border-radius:
+    14px !important;
+
+  transition:
+    all .25s ease;
+}
+
+/* BUTTON HOVER */
+
+.topbar button:hover,
+.navbar button:hover,
+header button:hover,
+nav button:hover {
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(20,184,166,0.22),
+      rgba(37,99,235,0.22)
+    ) !important;
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 12px 24px rgba(37,99,235,0.18);
+}
+
+/* ACTIVE BUTTON */
+
+.topbar .active,
+.navbar .active {
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E,
+      #2563EB
+    ) !important;
+
+  color:
+    white !important;
+
+  box-shadow:
+    0 10px 24px rgba(37,99,235,0.26);
+}
+
+/* LOGO AREA */
+
+.logo,
+.brand {
+
+  color:
+    white !important;
+}
+
+/* SECTION SPACING */
+
+section {
+
+  position: relative;
+
+  z-index: 1;
+}
+
+/* HERO EXTRA GLOW */
+
+.hero-section::after {
+
+  content: "";
+
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  top: -200px;
+  right: -180px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(37,99,235,0.18),
+      transparent 70%
+    );
+
+  filter:
+    blur(50px);
+
+  pointer-events: none;
+}
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .topbar,
+  .navbar,
+  header {
+
+    margin-inline: 10px;
+
+    border-radius: 18px;
+
+    padding:
+      12px 16px !important;
+  }
+}
