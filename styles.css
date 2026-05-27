@@ -2032,3 +2032,298 @@ h2 {
   box-shadow:
     0 8px 28px rgba(15,23,42,0.05);
 }
+/* ===== LEARNINDIANS LUXURY MASTERPIECE UI ===== */
+
+body {
+
+  background:
+    radial-gradient(circle at 10% 20%,
+      rgba(15,118,110,0.16),
+      transparent 24%),
+
+    radial-gradient(circle at 90% 10%,
+      rgba(37,99,235,0.18),
+      transparent 26%),
+
+    radial-gradient(circle at 50% 80%,
+      rgba(212,175,55,0.10),
+      transparent 28%),
+
+    linear-gradient(
+      180deg,
+      #f8fbff 0%,
+      #eef4ff 100%
+    ) !important;
+
+  background-attachment: fixed;
+}
+
+/* GLOBAL GLOW */
+
+body::before {
+
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(255,255,255,0.75),
+      transparent 38%);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+/* HERO SECTION */
+
+.hero-section {
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.hero-section::before {
+
+  content: "";
+
+  position: absolute;
+
+  width: 420px;
+  height: 420px;
+
+  top: -160px;
+  right: -120px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(circle,
+      rgba(37,99,235,0.22),
+      transparent 70%);
+
+  filter: blur(20px);
+
+  pointer-events: none;
+}
+
+.hero-section::after {
+
+  content: "";
+
+  position: absolute;
+
+  width: 320px;
+  height: 320px;
+
+  bottom: -120px;
+  left: -120px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(circle,
+      rgba(15,118,110,0.18),
+      transparent 70%);
+
+  filter: blur(20px);
+
+  pointer-events: none;
+}
+
+/* PREMIUM CARDS */
+
+.course-card,
+.panel,
+.metric,
+.stats-card {
+
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,0.68) !important;
+
+  backdrop-filter:
+    blur(18px);
+
+  border:
+    1px solid rgba(255,255,255,0.35);
+
+  border-radius: 28px !important;
+
+  box-shadow:
+    0 10px 40px rgba(15,23,42,0.08);
+
+  transition:
+    all .35s ease;
+}
+
+/* LIGHT REFLECTION */
+
+.course-card::before,
+.panel::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 60%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.42),
+      transparent
+    );
+
+  transform: skewX(-20deg);
+
+  transition: .8s;
+}
+
+.course-card:hover::before,
+.panel:hover::before {
+
+  left: 140%;
+}
+
+.course-card:hover {
+
+  transform:
+    translateY(-8px);
+
+  box-shadow:
+    0 28px 60px rgba(37,99,235,0.16);
+
+  border-color:
+    rgba(37,99,235,0.16);
+}
+
+/* BUTTONS */
+
+.primary-btn,
+.course-card button {
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E,
+      #2563EB
+    ) !important;
+
+  border: none !important;
+
+  border-radius: 18px !important;
+
+  color: white;
+
+  font-weight: 700;
+
+  box-shadow:
+    0 12px 30px rgba(37,99,235,0.28);
+
+  transition:
+    all .28s ease;
+}
+
+.primary-btn:hover,
+.course-card button:hover {
+
+  transform:
+    translateY(-3px) scale(1.02);
+
+  box-shadow:
+    0 22px 44px rgba(37,99,235,0.32);
+}
+
+/* NAVBAR */
+
+.topbar,
+.navbar {
+
+  background:
+    rgba(255,255,255,0.62) !important;
+
+  backdrop-filter:
+    blur(20px);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.35);
+
+  box-shadow:
+    0 6px 24px rgba(15,23,42,0.04);
+}
+
+/* TITLES */
+
+h1,
+h2,
+.hero-title {
+
+  background:
+    linear-gradient(
+      135deg,
+      #0F172A,
+      #2563EB
+    );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  letter-spacing: -0.04em;
+}
+
+/* BADGES */
+
+.badge,
+.tag,
+.course-tag {
+
+  background:
+    rgba(255,255,255,0.75) !important;
+
+  border:
+    1px solid rgba(15,118,110,0.12);
+
+  color:
+    #0F766E !important;
+
+  backdrop-filter:
+    blur(8px);
+}
+
+/* PREMIUM PHONE MOCKUP */
+
+.phone-preview,
+.mobile-preview {
+
+  background:
+    linear-gradient(
+      180deg,
+      #0F172A,
+      #111827
+    ) !important;
+
+  box-shadow:
+    0 40px 80px rgba(15,23,42,0.22);
+}
+
+/* SECTION SPACING */
+
+section {
+
+  position: relative;
+
+  z-index: 1;
+}
