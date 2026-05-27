@@ -3068,7 +3068,7 @@ body {
 
       width: 100%;
 
-      max-height: calc(100vh - 110px);
+     max-height: 88vh;
 
       padding: 20px;
 
@@ -3093,5 +3093,85 @@ body {
       font-size: 42px;
 
       line-height: 0.95;
+  }
+}
+@media (max-width: 768px) {
+
+  .modal-backdrop {
+
+      padding: 20px 10px !important;
+
+      align-items: flex-start !important;
+  }
+
+  .modal {
+
+      width: 100% !important;
+
+      max-height: 95vh !important;
+
+      overflow-y: auto !important;
+
+      padding: 18px !important;
+
+      border-radius: 26px !important;
+  }
+
+  .modal h2 {
+
+      font-size: 58px !important;
+
+      line-height: 0.92 !important;
+
+      letter-spacing: -2px;
+  }
+
+  .payment-modal {
+
+      display: flex !important;
+
+      flex-direction: column !important;
+
+      gap: 16px !important;
+  }
+
+  .payment-modal > div:first-child {
+
+      display: flex !important;
+
+      flex-direction: column !important;
+
+      align-items: center !important;
+
+      text-align: center !important;
+
+      gap: 16px !important;
+  }
+
+  .payment-modal img,
+  .payment-modal canvas {
+
+      width: 220px !important;
+
+      height: 220px !important;
+
+      max-width: 100%;
+  }
+
+  .payment-modal button {
+
+      width: 100%;
+  }
+
+  .modal input {
+
+      width: 100%;
+  }
+
+  .modal .ghost-btn {
+
+      margin-top: 12px;
+
+      width: 100%;
   }
 }
