@@ -1262,8 +1262,9 @@ function modal() {
         <h2>${state.authMode === "signup" ? "Create your account" : "Login to LearnIndians"}</h2>
         <p class="muted">${isCloudReady() ? "Use email and password. Your progress and certificates will be stored securely." : "Supabase keys are not added yet, so this uses demo login on this browser."}</p>
         <div class="segmented">
-          <button class="${state.authMode === "login" ? "active" : ""}" onclick="setAuthMode('login')">Login</button>
-          <button class="${state.authMode === "signup" ? "active" : ""}" onclick="setAuthMode('signup')">Create account</button>
+         <button class="auth-btn login-btn ${state.authMode === "login" ? "active" : ""}" onclick="setAuthMode('login')">Login</button>
+
+<button class="auth-btn signup-btn ${state.authMode === "signup" ? "active" : ""}" onclick="setAuthMode('signup')">Create account</button>
         </div>
         <div class="field ${state.authMode === "login" ? "hide" : ""}"><label>Full name</label><input id="name" autocomplete="name" placeholder="Enter your full name" /></div>
         <div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" /></div>
