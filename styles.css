@@ -2926,3 +2926,55 @@ body {
     margin: 0 !important;
     padding: 0 !important;
 }
+/* ===== PREMIUM AUTH BUTTONS ===== */
+
+.auth-btn {
+    padding: 12px 22px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.08);
+
+    letter-spacing: 0.2px;
+}
+
+/* Login button */
+.login-btn {
+    background: rgba(255,255,255,0.75);
+
+    color: #0f172a;
+
+    border: 1px solid rgba(15,23,42,0.08);
+
+    backdrop-filter: blur(10px);
+}
+
+/* Signup button */
+.signup-btn {
+    background: linear-gradient(
+        135deg,
+        #14b8a6,
+        #2563eb
+    );
+
+    color: white;
+}
+
+/* Hover */
+.auth-btn:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 14px 28px rgba(37,99,235,0.22);
+}
+
+/* Active click */
+.auth-btn:active {
+    transform: scale(0.97);
+}
