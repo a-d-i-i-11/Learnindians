@@ -1708,3 +1708,152 @@ body {
 .success-card p {
   color: #64748b;
 }
+/* ===== LEARNINDIANS PREMIUM UI PATCH ===== */
+
+body {
+  background:
+    radial-gradient(circle at top left,
+      rgba(15,118,110,0.06),
+      transparent 28%),
+
+    radial-gradient(circle at top right,
+      rgba(37,99,235,0.06),
+      transparent 32%),
+
+    #f5f7fb !important;
+}
+
+/* PREMIUM CARDS */
+
+.course-card,
+.panel,
+.admin-card,
+.metric,
+.lesson-card,
+.table-row {
+  border-radius: 24px !important;
+
+  border:
+    1px solid rgba(15,23,42,0.06);
+
+  background:
+    rgba(255,255,255,0.82);
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 30px rgba(15,23,42,0.06);
+
+  transition:
+    transform .28s ease,
+    box-shadow .28s ease;
+}
+
+.course-card:hover,
+.panel:hover,
+.admin-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 22px 45px rgba(15,23,42,0.12);
+}
+
+/* PREMIUM BUTTONS */
+
+.primary-btn {
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E,
+      #2563EB
+    ) !important;
+
+  border: none !important;
+
+  border-radius: 16px !important;
+
+  font-weight: 700;
+
+  box-shadow:
+    0 14px 28px rgba(37,99,235,0.22);
+
+  transition: all .3s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 20px 40px rgba(37,99,235,0.28);
+}
+
+/* PREMIUM NAVBAR */
+
+.topbar {
+  backdrop-filter: blur(18px);
+
+  background:
+    rgba(255,255,255,0.72) !important;
+
+  border-bottom:
+    1px solid rgba(15,23,42,0.06);
+}
+
+/* BETTER TYPOGRAPHY */
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+}
+
+/* CLEAN INPUTS */
+
+input,
+textarea,
+select {
+  border-radius: 14px !important;
+
+  border:
+    1px solid rgba(15,23,42,0.08);
+
+  background: white;
+}
+
+/* MOBILE POLISH */
+
+@media (max-width: 768px) {
+
+  .course-card,
+  .panel,
+  .lesson-card {
+    border-radius: 22px !important;
+  }
+
+  .topbar {
+    padding: 14px !important;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    min-height: 44px;
+  }
+}
+/* ===== EQUAL COURSE CARD HEIGHT FIX ===== */
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  min-height: 420px;
+}
+
+.course-card p {
+  min-height: 88px;
+}
+
+.course-card .primary-btn,
+.course-card button {
+  margin-top: auto;
+}
