@@ -1013,18 +1013,39 @@ h2 {
 }
 
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  background: rgba(5, 8, 12, 0.58);
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+
+    display: grid;
+
+    place-items: center;
+
+    align-items: start;
+
+    overflow-y: auto;
+
+    padding: 18px;
+
+    background: rgba(5, 8, 12, 0.58);
 }
 
 .modal {
-  width: min(460px, 100%);
-  padding: 22px;
+    width: min(720px, 92vw);
+
+    max-height: 92vh;
+
+    overflow-y: auto;
+
+    padding: 32px;
+
+    border-radius: 30px;
+
+    background: rgba(255,255,255,0.96);
+
+    box-shadow: 0 25px 60px rgba(15,23,42,0.25);
+
+    backdrop-filter: blur(20px);
 }
 
 .payment-modal {
