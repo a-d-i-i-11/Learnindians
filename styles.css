@@ -1013,6 +1013,7 @@ h2 {
 }
 
 .modal-backdrop {
+
     position: fixed;
     inset: 0;
     z-index: 50;
@@ -1025,17 +1026,24 @@ h2 {
 
     overflow-y: auto;
 
+    -webkit-overflow-scrolling: touch;
+
     padding: 18px;
 
     background: rgba(5, 8, 12, 0.58);
 }
 
 .modal {
+
     width: min(720px, 92vw);
 
     max-height: 92vh;
 
     overflow-y: auto;
+
+    display: flex;
+
+    flex-direction: column;
 
     padding: 32px;
 
@@ -1047,7 +1055,6 @@ h2 {
 
     backdrop-filter: blur(20px);
 }
-
 .payment-modal {
   width: min(620px, 100%);
 }
