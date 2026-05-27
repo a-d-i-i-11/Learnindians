@@ -2915,3 +2915,14 @@ body {
             #eef4ff 100%
         ) !important;
 }
+/* ===== REMOVE TOP GAP ===== */
+
+html {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
