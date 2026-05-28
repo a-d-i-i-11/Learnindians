@@ -1016,23 +1016,20 @@ h2 {
 
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: 999;
 
-    display: grid;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 
-    place-items: center;
-
-    align-items: start;
+    padding: 40px 18px;
 
     overflow-y: auto;
 
-    -webkit-overflow-scrolling: touch;
-
-    padding: 18px;
-
     background: rgba(5, 8, 12, 0.58);
-}
 
+    backdrop-filter: blur(8px);
+}
 .modal {
 
     width: min(720px, 94vw);
@@ -1071,12 +1068,13 @@ h2 {
 .payment-modal {
 
     width: min(620px, 100%);
+    max-height: unset;
 
-    max-height: 92vh;
-
-    overflow-y: auto;
+    overflow-y: visible;
 
     padding-bottom: 26px;
+
+    margin: auto 0;
 }
 
 .field {
