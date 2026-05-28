@@ -3175,3 +3175,60 @@ body {
       width: 100%;
   }
 }
+.upi-box {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+
+    .mobile-stack {
+
+        flex-direction: column !important;
+
+        align-items: center !important;
+
+        text-align: center !important;
+    }
+
+    .mobile-stack img {
+
+        width: 220px !important;
+
+        height: 220px !important;
+
+        max-width: 100%;
+    }
+
+    .mobile-stack h3 {
+
+        font-size: 38px;
+    }
+
+    .mobile-stack .pay-link,
+    .mobile-stack .primary-btn,
+    .mobile-stack .ghost-btn {
+
+        width: 100%;
+    }
+
+    .payment-modal {
+
+        max-height: 90vh !important;
+
+        overflow-y: auto !important;
+    }
+
+    .payment-steps div {
+
+        font-size: 15px;
+    }
+
+    .modal h2 {
+
+        font-size: 52px !important;
+
+        line-height: 0.95 !important;
+    }
+}
