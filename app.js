@@ -1231,7 +1231,7 @@ function modal() {
           <p class="eyebrow">Manual UPI verification</p>
           <h2>Enroll in ${course.title}</h2>
           <p class="muted">Pay ₹${brandConfig.coursePrice} to ${brandConfig.businessName}, then enter the UTR/reference number. Admin approval unlocks the course.</p>
-          <div class="upi-box">
+          <div class="upi-box mobile-stack">
             <img src="${qrUrl}" alt="UPI payment QR for ${brandConfig.businessName}" />
             <div>
               <span class="badge">UPI ID</span>
