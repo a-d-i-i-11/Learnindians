@@ -7,13 +7,28 @@ const courses = [
     duration: "1 day",
     lessons: 6,
     summary: "Run smooth guest journeys across rooms, teams, service standards, and daily operations.",
-    modules: [
-      ["The Hotel Flow", "Hotels work when departments move as one system: front office, housekeeping, food service, maintenance, and guest relations. Your job is to keep the guest experience consistent even when the back office is busy."],
-      ["Guest Moments", "Every stay has moments that matter: arrival, first room impression, issue handling, dining, payment, and checkout. A professional notices friction early and solves it before the guest has to repeat themselves."],
-      ["Daily Controls", "Use checklists for occupancy, VIP arrivals, room readiness, maintenance flags, shift handover, and complaint logs. Small checks protect revenue and reputation."],
-      ["Service Recovery", "A complaint is handled in four steps: listen, acknowledge, solve, and follow up. Speed matters, but respect matters more."],
-      ["Professional Conduct", "Clear grooming, calm voice, accurate information, and ownership make guests trust the property."],
-    ],
+  modules: [
+  {
+    title: "The Hotel Flow",
+    duration: "5 min",
+    type: "lesson",
+    content: "Hotels work when departments move as one system..."
+  },
+
+  {
+    title: "Guest Moments",
+    duration: "6 min",
+    type: "lesson",
+    content: "Every stay has moments that matter..."
+  },
+
+  {
+    title: "Daily Controls",
+    duration: "7 min",
+    type: "lesson",
+    content: "Use checklists for occupancy..."
+  }
+],
     quiz: {
       question: "What is the strongest service recovery sequence?",
       options: ["Listen, acknowledge, solve, follow up", "Argue, discount, close", "Ignore, escalate, wait"],
