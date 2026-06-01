@@ -1113,8 +1113,30 @@ function paymentRequestsTable() {
         <strong>${request.student_name || request.user_email || "Learner"}</strong>
         <p class="muted">${request.course_title} · ₹${request.amount} · UTR: ${request.utr}</p>
       </div>
-      <span class="pill">${request.status}</span>
-      ${request.status === "pending" ? `<button class="primary-btn" onclick="approvePaymentRequest('${request.id || ""}', '${request.user_id || ""}', '${request.course_id}')">Approve</button>` : `<span class="pill">Done</span>`}
+ ${
+request.status === "pending"
+? ` <div class="admin-actions">
+
+```
+    <button
+      class="primary-btn"
+      onclick="approvePaymentRequest('${request.id || ""}', '${request.user_id || ""}', '${request.course_id}')">
+      Approve
+    </button>
+
+    <button
+      class="danger-btn"
+      onclick="declinePaymentRequest('${request.id || ""}')">
+      Decline
+    </button>
+
+  </div>
+`
+: `<span class="pill">Done</span>`
+```
+
+}
+
     </div>
   `).join("");
 }
@@ -1417,6 +1439,22 @@ async function approvePaymentRequest(requestId, userId, courseId) {
     render();
     return;
   }
+  function declinePaymentRequest(requestId) {
+
+const request = state.paymentRequests[requestId];
+
+if (!request) return;
+
+request.status = "declined";
+
+saveState();
+
+state.toast = "Payment request declined";
+
+render();
+
+}
+
 
   const { error: requestError } = await supabaseClient
     .from("payment_requests")
@@ -1622,4 +1660,25 @@ function downloadCertificate(certId) {
   setTimeout(() => {
     printWindow.print();
   }, 700);
+}
+.danger-btn {
+  border: none;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.danger-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.25);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
