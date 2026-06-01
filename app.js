@@ -1116,8 +1116,6 @@ function paymentRequestsTable() {
  ${
 request.status === "pending"
 ? ` <div class="admin-actions">
-
-```
     <button
       class="primary-btn"
       onclick="approvePaymentRequest('${request.id || ""}', '${request.user_id || ""}', '${request.course_id}')">
@@ -1133,7 +1131,6 @@ request.status === "pending"
   </div>
 `
 : `<span class="pill">Done</span>`
-```
 
 }
 
