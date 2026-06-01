@@ -1488,65 +1488,6 @@ showSuccessAnimation(
 render();
 }
 
-function declinePaymentRequest(requestId) {
-
-const request = state.adminPaymentRequests.find(
-(item) => item.id === requestId
-);
-
-if (!request) return;
-
-request.status = "declined";
-
-showToast("Payment request declined");
-
-render();
-}
-
-
-  const { error: requestError } = await supabaseClient
-    .from("payment_requests")
-    .update({
-      status: "approved",
-      approved_by: state.user.id,
-      approved_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", requestId);
-
-  if (requestError) {
-    showToast(requestError.message);
-    return;
-  }
-
-  const { error: enrollmentError } = await supabaseClient
-    .from("enrollments")
-    .upsert({
-      user_id: userId,
-      course_id: courseId,
-      paid: true,
-      completed_modules: [],
-      quiz_passed: false,
-      updated_at: new Date().toISOString(),
-    });
-
-  if (enrollmentError) {
-    showToast(enrollmentError.message);
-    return;
-  }
-
-  state.adminStats = null;
-  state.adminPaymentRequests = [];
-
-  await loadAdminStats();
-
-  showSuccessAnimation(
-    "Course Approved",
-    "The learner now has access to the course."
-  );
-
-  render();
-}
 function completeModule(courseId, moduleIndex) {
   const progress = getProgress(courseId);
   const completedModules = [...new Set([...progress.completedModules, moduleIndex])];
@@ -1556,7 +1497,22 @@ function completeModule(courseId, moduleIndex) {
 
 function nextModule(courseId) {
   const course = courses.find((item) => item.id === courseId);
-  completeModule(courseId, state.activeModule);
+  completeModule(courseId, state.activeModule);function declinePaymentRequest(requestId) {
+
+  if (!state.isAdmin) return;
+
+  const request = state.adminPaymentRequests.find(
+    (item) => item.id === requestId
+  );
+
+  if (!request) return;
+
+  request.status = "declined";
+
+  showToast("Payment request declined");
+
+  render();
+}
   state.activeModule = Math.min(course.modules.length, state.activeModule + 1);
   render();
 }
