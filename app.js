@@ -1439,21 +1439,21 @@ async function approvePaymentRequest(requestId, userId, courseId) {
     render();
     return;
   }
-  function declinePaymentRequest(requestId) {
+function declinePaymentRequest(requestId) {
 
-const request = state.paymentRequests[requestId];
+const request = state.adminPaymentRequests.find(
+(item) => item.id === requestId
+);
 
 if (!request) return;
 
 request.status = "declined";
 
-saveState();
-
-state.toast = "Payment request declined";
+showToast("Payment request declined");
 
 render();
-
 }
+
 
 
   const { error: requestError } = await supabaseClient
