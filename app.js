@@ -1429,19 +1429,16 @@ button.innerHTML = `     <span class="loader"></span>
 
 if (!isCloudReady()) {
 
-```
-setProgress(courseId, { paid: true });
+  setProgress(courseId, { paid: true });
 
-showSuccessAnimation(
-  "Course Unlocked",
-  "Payment approved successfully."
-);
+  showSuccessAnimation(
+    "Course Unlocked",
+    "Payment approved successfully."
+  );
 
-render();
+  render();
 
-return;
-```
-
+  return;
 }
 
 const { error: requestError } = await supabaseClient
@@ -1494,25 +1491,24 @@ function completeModule(courseId, moduleIndex) {
   setProgress(courseId, { completedModules });
   showToast("Lesson completed.");
 }
-
 function nextModule(courseId) {
-  const course = courses.find((item) => item.id === courseId);
-  completeModule(courseId, state.activeModule);function declinePaymentRequest(requestId) {
 
-  if (!state.isAdmin) return;
-
-  const request = state.adminPaymentRequests.find(
-    (item) => item.id === requestId
+  const course = courses.find(
+    (item) => item.id === courseId
   );
 
-  if (!request) return;
+  completeModule(courseId, state.activeModule);
 
-  request.status = "declined";
-
-  showToast("Payment request declined");
+  state.activeModule = Math.min(
+    course.modules.length,
+    state.activeModule + 1
+  );
 
   render();
 }
+
+  completeModule(courseId, state.activeModule);
+
   state.activeModule = Math.min(course.modules.length, state.activeModule + 1);
   render();
 }
