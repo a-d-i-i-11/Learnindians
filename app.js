@@ -1417,28 +1417,77 @@ async function submitManualPayment(courseId) {
 
 async function approvePaymentRequest(requestId, userId, courseId) {
 
-  if (!state.isAdmin) return;
+if (!state.isAdmin) return;
 
-  const button = event.target;
+const button = event.target;
 
-  button.disabled = true;
+button.disabled = true;
 
-  button.innerHTML = `
-    <span class="loader"></span>
+button.innerHTML = `     <span class="loader"></span>
     Approving...
   `;
 
-  if (!isCloudReady()) {
-    setProgress(courseId, { paid: true });
+if (!isCloudReady()) {
 
-    showSuccessAnimation(
-      "Course Unlocked",
-      "Payment approved successfully."
-    );
+```
+setProgress(courseId, { paid: true });
 
-    render();
-    return;
-  }
+showSuccessAnimation(
+  "Course Unlocked",
+  "Payment approved successfully."
+);
+
+render();
+
+return;
+```
+
+}
+
+const { error: requestError } = await supabaseClient
+.from("payment_requests")
+.update({
+status: "approved",
+approved_by: state.user.id,
+approved_at: new Date().toISOString(),
+updated_at: new Date().toISOString(),
+})
+.eq("id", requestId);
+
+if (requestError) {
+showToast(requestError.message);
+return;
+}
+
+const { error: enrollmentError } = await supabaseClient
+.from("enrollments")
+.upsert({
+user_id: userId,
+course_id: courseId,
+paid: true,
+completed_modules: [],
+quiz_passed: false,
+updated_at: new Date().toISOString(),
+});
+
+if (enrollmentError) {
+showToast(enrollmentError.message);
+return;
+}
+
+state.adminStats = null;
+state.adminPaymentRequests = [];
+
+await loadAdminStats();
+
+showSuccessAnimation(
+"Course Approved",
+"The learner now has access to the course."
+);
+
+render();
+}
+
 function declinePaymentRequest(requestId) {
 
 const request = state.adminPaymentRequests.find(
@@ -1453,7 +1502,6 @@ showToast("Payment request declined");
 
 render();
 }
-
 
 
   const { error: requestError } = await supabaseClient
